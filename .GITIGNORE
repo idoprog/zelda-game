@@ -12,6 +12,10 @@
 *.pif
 *.vb
 *.wsf
+*.obj
+*.map
+*.TD
+*.OVL
 
 ### Windows ###
 # Windows thumbnail cache files
