@@ -22,25 +22,6 @@ downRow:
 	mov dl, 0ah
 	int 21h
 row:
-	push si
-	push di
-	push [y_player]
-	push [x_player]
-	call check_pos
-	mov ah,2
-	cmp cx,1
-	je print_player
-	jne reg_print
-print_player:
-	mov ah,9
-	mov bx,2
-	mov cx,1
-	int 10h
-	mov ah,2
-	mov dl,219
-	int 21h
-	jmp contu_proses
-reg_print:
 	mov ah,9
 	mov bx,0
 	mov cx,1
@@ -49,7 +30,6 @@ reg_print:
 	mov dl,219
 	int 21h
 	mov cx,0
-contu_proses:
 	dec di
 	cmp di, 0
 	jne row
@@ -151,7 +131,7 @@ y_offset equ [bp+4]
 	mov bp,sp
 	cmp al,'d'
 	je right_true
-	jne not_right ;lol pun
+	jne not_right 
 right_true:
 	dec [word ptr bx]
 not_right:
@@ -240,9 +220,9 @@ endp timer
 start:
 	mov ax,@data
 	mov ds,ax
-	push offset x_player
-	push offset y_player
-	call player_mov
+	call print_board
+jmping:
+	jmp jmping
 exit:
 	mov ax, 4c00h
 	int 21h
