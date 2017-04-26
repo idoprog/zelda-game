@@ -122,77 +122,9 @@ cont:
 	ret 4 
 endp player_mov
 
-proc is_right
-x_offset equ [bp+6]
-y_offset equ [bp+4]
-	push bp
-	push bx
-	mov bx,x_offset
-	mov bp,sp
-	cmp al,'d'
-	je right_true
-	jne not_right 
-right_true:
-	dec [word ptr bx]
-not_right:
-	pop bx
-	pop bp
-	ret 4
-endp is_right
 	
-proc is_left
-x_offset equ [bp+6]
-y_offset equ [bp+4]
-	push bp
-	push bx
-	mov bp,sp
-	mov bx,x_offset
-	cmp al,'a'
-	je left_true
-	jne not_left
-left_true:
-	inc [word ptr bx]
-not_left:
-	pop bx
-	pop bp
-	ret 4
-endp is_left
 
-proc is_up
-x_offset equ [bp+6]
-y_offset equ [bp+4]
-	push bp
-	push bx
-	mov bp,sp
-	mov bx,y_offset
-	cmp al,'w'
-	je up_true
-	jne not_up
-up_true:
-	inc [word ptr bx]
-not_up:
-	pop bx
-	pop bp
-	ret 4
-endp is_up
 
-proc is_down
-x_offset equ [bp+6]
-y_offset equ [bp+4]
-	push bp
-	push bx
-	mov bp,sp
-	mov bx,y_offset
-	cmp al,'s'
-	je down_true
-	jne not_down
-down_true:
-	dec [word ptr bx]
-not_down:
-	pop bx
-	pop bp
-	ret 4
-endp is_down
 
 proc timer
 mil_sec_to_wait equ [bp+4]
@@ -222,6 +154,7 @@ start:
 	mov ds,ax
 	call print_board
 jmping:
+	
 	jmp jmping
 exit:
 	mov ax, 4c00h
