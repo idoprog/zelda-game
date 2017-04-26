@@ -2,8 +2,8 @@ IDEAL
 MODEL small
 STACK 100h
 DATASEG
-x_player dw 79 
-y_player dw 25
+x_player dw 40
+y_player dw 12
 
 CODESEG
 proc print_board
@@ -122,8 +122,37 @@ cont:
 	ret 4 
 endp player_mov
 
+proc print_char
+x equ [bp+8]
+y equ [bp+6]
+color equ [bp+4]	
+	push bp
+	mov bp,sp
+	push dx
+	push ax
+	push cx
+	push bx
+	mov bx,x
+	mov dl, [bx]
+	mov bx,y
+	mov dh, [bx]  
+	mov bx, 0      
+	mov ah, 02h    
+	int 10h
 	
-
+	mov ah,9  
+	mov bx,color
+	mov cx,1
+	mov al,219
+	int 10h
+	
+	pop bx
+	pop cx
+	pop ax
+	pop dx
+	pop bp
+	ret 6
+endp print_char
 
 
 proc timer
@@ -153,8 +182,11 @@ start:
 	mov ax,@data
 	mov ds,ax
 	call print_board
+	push offset x_player
+	push offset y_player
+	push 2
+	call print_char
 jmping:
-	
 	jmp jmping
 exit:
 	mov ax, 4c00h
