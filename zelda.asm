@@ -4,7 +4,6 @@ STACK 100h
 DATASEG
 x_player dw 40
 y_player dw 12
-
 CODESEG
 proc print_board
 	push bp
@@ -75,56 +74,171 @@ popping:
 	ret 8
 endp check_pos
 
-proc player_mov
-up equ 'w'
-left equ 'a'
-down equ 's'
-right equ 'd'
-x_offset equ [bp+6]
-y_offset equ [bp+4]
+
+
+
+proc check_for_press
+x_player_offset equ [bp+6]
+y_player_offset equ [bp+4]
+	push bp
+	mov bp,sp
+	push ax
+	mov ah,1h
+	int 16h
+	jnz pres
+	jz ending_func
+pres:
+	cmp al,'w'
+	je up_pressed
+	jne keep_check1
+keep_check1:
+	cmp al,'a' 
+	je left_pressed
+	jne keep_check2
+keep_check2:
+	cmp al,'s'
+	je down_pressed
+	jne keep_check3
+keep_check3:
+	cmp al,'d'
+	je right_pressed
+	jne ending_func
+up_pressed:
+	push x_player_offset
+	push y_player_offset
+	call mov_up
+	jmp ending_func
+down_pressed:
+	push x_player_offset
+	push y_player_offset
+	call mov_down
+	jmp ending_func
+right_pressed:
+	push x_player_offset
+	push y_player_offset
+	call mov_right
+	jmp ending_func
+left_pressed:	
+	push x_player_offset
+	push y_player_offset
+	call mov_left
+ending_func:
+	mov ah,0Ch
+	mov al,0
+	int 21h
+	pop ax
+	pop bp
+	ret 4
+endp check_for_press
+	
+	
+proc mov_up
+x_player_offset equ [bp+6]
+y_player_offset equ [bp+4]
 	push bp
 	mov bp,sp
 	push bx
-	push si
-	call print_board
-	mov bx,x_offset
-	mov si,y_offset
-waitForData:
-	mov ah, 1
-	int 16h
-	jnz waitForData
-	mov ah, 0
-	int 16h
-	cmp al, right
-	je mov_right
-	cmp al, left
-	je mov_left
-	cmp al, up
-	je mov_up
-	cmp al, down
-	je mov_down
-	
-mov_right:
+	push ax
+	push cx
+	push x_player_offset
+	push y_player_offset
+	push 0
+	call print_char
+	mov bx,y_player_offset
 	dec [word ptr bx]
-	jmp cont
-mov_left:
-	inc [word ptr bx]
-	jmp cont
-mov_up:
-	inc [word ptr si]
-	jmp cont
-mov_down:
-	dec [word ptr si]
-cont:
-	call print_board
-	jmp waitForData
+	push x_player_offset
+	push y_player_offset
+	push 2
+	call print_char
+	pop cx
+	pop ax
+	pop bx
 	pop bp
-	ret 4 
-endp player_mov
+	ret 4
+endp mov_up
 
+proc mov_down	
+x_player_offset equ [bp+6]
+y_player_offset equ [bp+4]
+	push bp
+	mov bp,sp
+	push bx
+	push ax
+	push cx
+	push x_player_offset
+	push y_player_offset
+	push 0
+	call print_char
+	mov bx,y_player_offset
+	inc [word ptr bx]
+	push x_player_offset
+	push y_player_offset
+	push 2
+	call print_char
+	pop cx
+	pop ax
+	pop bx
+	pop bp
+	ret 4
+endp mov_down
+
+proc mov_right	
+x_player_offset equ [bp+6]
+y_player_offset equ [bp+4]
+	push bp
+	mov bp,sp
+	push bx
+	push ax
+	push cx
+	push x_player_offset
+	push y_player_offset
+	push 0
+	call print_char
+	mov bx,x_player_offset
+	inc [word ptr bx]
+	push x_player_offset
+	push y_player_offset
+	push 2
+	call print_char
+	pop cx
+	pop ax
+	pop bx
+	pop bp
+	ret 4
+endp mov_right
+	
+proc mov_left	
+x_player_offset equ [bp+6]
+y_player_offset equ [bp+4]
+	push bp
+	mov bp,sp
+	push bx
+	push ax
+	push cx
+	push x_player_offset
+	push y_player_offset
+	push 0
+	call print_char
+	mov bx,x_player_offset
+	dec [word ptr bx]
+	push x_player_offset
+	push y_player_offset
+	push 2
+	call print_char
+	pop cx
+	pop ax
+	pop bx
+	pop bp
+	ret 4
+endp mov_left
+
+	
+	
+	
+	
 proc print_char
-x equ [bp+8]
-y equ [bp+6]
+x_offest equ [bp+8]
+y_offset equ [bp+6]
 color equ [bp+4]	
 	push bp
 	mov bp,sp
@@ -132,9 +246,9 @@ color equ [bp+4]
 	push ax
 	push cx
 	push bx
-	mov bx,x
+	mov bx,x_offest
 	mov dl, [bx]
-	mov bx,y
+	mov bx,y_offset
 	mov dh, [bx]  
 	mov bx, 0      
 	mov ah, 02h    
@@ -163,14 +277,31 @@ mil_sec_to_wait equ [bp+4]
 	push ax
 	push dx
 	push bx
+	push di
+	mov di,mil_sec_to_wait
+	dec di
+time_loop:
 	mov ah,2Ch
 	int 21h
 	mov bl,dl
-	add bx,mil_sec_to_wait
+	add bl,1
+	cmp bl,100
+	je subin
+	jne check_agian
+subin:
+	mov bl,0
 check_agian:
 	int 21h
 	cmp bl,dl
 	jne check_agian
+	cmp di,0
+	jne cunt
+	je ending_func1
+cunt:
+	dec di
+	jmp time_loop
+ending_func1:
+	pop di
 	pop bx
 	pop dx
 	pop ax
@@ -187,6 +318,9 @@ start:
 	push 2
 	call print_char
 jmping:
+	push offset x_player
+	push offset y_player
+	call check_for_press
 	jmp jmping
 exit:
 	mov ax, 4c00h
