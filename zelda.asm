@@ -4,8 +4,9 @@ STACK 100h
 DATASEG
 x_player dw 40
 y_player dw 12
+rand_num db ?
 CODESEG
-proc print_board
+proc print_black_board
 	push bp
 	mov bp,sp
 	push ax
@@ -44,7 +45,90 @@ row:
 	pop ax
 	pop bp 
 	ret
-endp print_board
+endp print_black_board
+
+proc print_game_board
+	push bp
+	mov bp,sp
+	push si
+	push di
+	
+	mov si,0
+print_squre1_y:
+	mov di,0
+print_squre1_x:
+	push di
+	push si
+	push 2
+	call print_char
+	inc di
+	cmp di,35
+	jne print_squre1_x
+
+	inc si 
+	cmp si,8
+	jne print_squre1_y
+	
+	
+	
+	mov si,0
+print_squre2_y:
+	mov di,45
+print_squre2_x:
+	push di
+	push si
+	push 2
+	call print_char
+	inc di
+	cmp di,80
+	jne print_squre2_x
+
+	inc si 
+	cmp si,8
+	jne print_squre2_y
+	
+	
+	mov si,17
+print_squre3_y:
+	mov di,0
+print_squre3_x:
+	push di
+	push si
+	push 2
+	call print_char
+	inc di
+	cmp di,35
+	jne print_squre3_x
+
+	inc si 
+	cmp si,25
+	jne print_squre3_y
+	
+	
+	mov si,17
+print_squre4_y:
+	mov di,45
+print_squre4_x:
+	push di
+	push si
+	push 2
+	call print_char
+	inc di
+	cmp di,80
+	jne print_squre4_x
+
+	inc si 
+	cmp si,25
+	jne print_squre4_y
+	
+	
+	
+	pop di
+	pop si
+	pop bp
+	ret 
+endp print_game_board
+
 
 proc check_pos
 x_pos equ [bp+4]
@@ -140,14 +224,22 @@ y_player_offset equ [bp+4]
 	push bx
 	push ax
 	push cx
-	push x_player_offset
-	push y_player_offset
+	mov bx,x_player_offset
+	mov ax,[bx] ;ax = x
+	mov bx,y_player_offset
+	mov cx,[bx] ;cx = y
+	push ax
+	push cx
 	push 0
 	call print_char
 	mov bx,y_player_offset
 	dec [word ptr bx]
-	push x_player_offset
-	push y_player_offset
+	mov bx,x_player_offset
+	mov ax,[bx] ;ax = x
+	mov bx,y_player_offset
+	mov cx,[bx] ;cx = y
+	push ax
+	push cx
 	push 2
 	call print_char
 	pop cx
@@ -165,14 +257,22 @@ y_player_offset equ [bp+4]
 	push bx
 	push ax
 	push cx
-	push x_player_offset
-	push y_player_offset
+	mov bx,x_player_offset
+	mov ax,[bx] ;ax = x
+	mov bx,y_player_offset
+	mov cx,[bx] ;cx = y
+	push ax
+	push cx
 	push 0
 	call print_char
 	mov bx,y_player_offset
 	inc [word ptr bx]
-	push x_player_offset
-	push y_player_offset
+	mov bx,x_player_offset
+	mov ax,[bx] ;ax = x
+	mov bx,y_player_offset
+	mov cx,[bx] ;cx = y
+	push ax
+	push cx
 	push 2
 	call print_char
 	pop cx
@@ -190,14 +290,22 @@ y_player_offset equ [bp+4]
 	push bx
 	push ax
 	push cx
-	push x_player_offset
-	push y_player_offset
+	mov bx,x_player_offset
+	mov ax,[bx] ;ax = x
+	mov bx,y_player_offset
+	mov cx,[bx] ;cx = y
+	push ax
+	push cx
 	push 0
 	call print_char
 	mov bx,x_player_offset
 	inc [word ptr bx]
-	push x_player_offset
-	push y_player_offset
+	mov bx,x_player_offset
+	mov ax,[bx] ;ax = x
+	mov bx,y_player_offset
+	mov cx,[bx] ;cx = y
+	push ax
+	push cx
 	push 2
 	call print_char
 	pop cx
@@ -215,16 +323,27 @@ y_player_offset equ [bp+4]
 	push bx
 	push ax
 	push cx
-	push x_player_offset
-	push y_player_offset
+	mov bx,x_player_offset
+	mov ax,[bx] ;ax = x
+	mov bx,y_player_offset
+	mov cx,[bx] ;cx = y
+	push ax
+	push cx
 	push 0
 	call print_char
+	
 	mov bx,x_player_offset
 	dec [word ptr bx]
-	push x_player_offset
-	push y_player_offset
+	
+	mov bx,x_player_offset
+	mov ax,[bx] ;ax = x
+	mov bx,y_player_offset
+	mov cx,[bx] ;cx = y
+	push ax
+	push cx
 	push 2
 	call print_char
+	
 	pop cx
 	pop ax
 	pop bx
@@ -237,8 +356,8 @@ endp mov_left
 	
 	
 proc print_char
-x_offest equ [bp+8]
-y_offset equ [bp+6]
+x equ [bp+8]
+y equ [bp+6]
 color equ [bp+4]	
 	push bp
 	mov bp,sp
@@ -246,10 +365,9 @@ color equ [bp+4]
 	push ax
 	push cx
 	push bx
-	mov bx,x_offest
-	mov dl, [bx]
-	mov bx,y_offset
-	mov dh, [bx]  
+	
+	mov dl,x
+	mov dh,y  
 	mov bx, 0      
 	mov ah, 02h    
 	int 10h
@@ -309,19 +427,38 @@ ending_func1:
 	pop bp 
 	ret 2
 endp timer
+
+proc random_1to4
+rand_num_offset equ [bp+4]
+	push bp
+	mov bp,sp
+	push cx
+	push dx
+	push bx
+	push ax
+	mov ah,2Ch
+	int 21h
+	mov al,dl
+	xor ah,ah
+	mov bl,25
+	div bl
+	mov bx,rand_num_offset
+	mov [byte ptr bx],al
+	pop ax
+	pop bx
+	pop dx
+	pop cx
+	pop bp
+	ret 2
+endp random_1to4
+
 start:
 	mov ax,@data
 	mov ds,ax
-	call print_board
-	push offset x_player
-	push offset y_player
-	push 2
-	call print_char
-jmping:
-	push offset x_player
-	push offset y_player
-	call check_for_press
-	jmp jmping
+	call print_black_board
+	call print_game_board
+looping:
+	jmp looping
 exit:
 	mov ax, 4c00h
 	int 21h
