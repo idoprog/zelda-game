@@ -50,12 +50,79 @@ endp print_black_board
 proc print_game_board
 	push bp
 	mov bp,sp
+;printing gray square and on that green (top left)
+	push 0 ;starting_pos_x
+	push 0 ;starting_pos_y
+	push 35 ;ending_pos_x
+	push 8 ;ending_pos_y
+	push 8 ;color
+	call print_squre
 	
-	push 0
-	push 0
-	push 35
-	push 8
-	push 2
+	push 0 ;starting_pos_x
+	push 0 ;starting_pos_y
+	push 33 ;ending_pos_x
+	push 7 ;ending_pos_y
+	push 2 ;color
+	call print_squre
+	
+;printing gray square and on that green (top right)
+	push 45 ;starting_pos_x
+	push 0 ;starting_pos_y
+	push 80 ;ending_pos_x
+	push 8 ;ending_pos_y
+	push 8 ;color
+	call print_squre
+	
+	push 47 ;starting_pos_x
+	push 0 ;starting_pos_y
+	push 80 ;ending_pos_x
+	push 7 ;ending_pos_y
+	push 2 ;color
+	call print_squre
+
+;printing gray square and on that green (bottom left)
+	push 0 ;starting_pos_x
+	push 17 ;starting_pos_y
+	push 35 ;ending_pos_x
+	push 25 ;ending_pos_y
+	push 8 ;color
+	call print_squre
+	
+	push 0 ;starting_pos_x
+	push 18 ;starting_pos_y
+	push 33 ;ending_pos_x
+	push 25 ;ending_pos_y
+	push 2 ;color
+	call print_squre
+	
+;printing gray square and on that green (bottom right)
+	push 45 ;starting_pos_x
+	push 17 ;starting_pos_y
+	push 80 ;ending_pos_x
+	push 25 ;ending_pos_y
+	push 8 ;color
+	call print_squre
+	
+	push 47 ;starting_pos_x
+	push 18 ;starting_pos_y
+	push 80 ;ending_pos_x
+	push 25 ;ending_pos_y
+	push 2 ;color
+	call print_squre
+	
+;roads
+	push 0 ;starting_pos_x
+	push 8 ;starting_pos_y
+	push 80 ;ending_pos_x
+	push 17 ;ending_pos_y
+	push 6 ;color
+	call print_squre
+	
+	push 35 ;starting_pos_x
+	push 0 ;starting_pos_y
+	push 45 ;ending_pos_x
+	push 25 ;ending_pos_y
+	push 6 ;color
 	call print_squre
 	
 	pop bp
