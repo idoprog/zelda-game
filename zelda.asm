@@ -50,86 +50,51 @@ endp print_black_board
 proc print_game_board
 	push bp
 	mov bp,sp
-	push si
-	push di
 	
-	mov si,0
-print_squre1_y:
-	mov di,0
-print_squre1_x:
-	push di
-	push si
+	push 0
+	push 0
+	push 35
+	push 8
 	push 2
-	call print_char
-	inc di
-	cmp di,35
-	jne print_squre1_x
-
-	inc si 
-	cmp si,8
-	jne print_squre1_y
+	call print_squre
 	
-	
-	
-	mov si,0
-print_squre2_y:
-	mov di,45
-print_squre2_x:
-	push di
-	push si
-	push 2
-	call print_char
-	inc di
-	cmp di,80
-	jne print_squre2_x
-
-	inc si 
-	cmp si,8
-	jne print_squre2_y
-	
-	
-	mov si,17
-print_squre3_y:
-	mov di,0
-print_squre3_x:
-	push di
-	push si
-	push 2
-	call print_char
-	inc di
-	cmp di,35
-	jne print_squre3_x
-
-	inc si 
-	cmp si,25
-	jne print_squre3_y
-	
-	
-	mov si,17
-print_squre4_y:
-	mov di,45
-print_squre4_x:
-	push di
-	push si
-	push 2
-	call print_char
-	inc di
-	cmp di,80
-	jne print_squre4_x
-
-	inc si 
-	cmp si,25
-	jne print_squre4_y
-	
-	
-	
-	pop di
-	pop si
 	pop bp
 	ret 
 endp print_game_board
 
+proc print_squre
+starting_pos_x equ [bp+12]
+starting_pos_y equ [bp+10]
+ending_pos_x equ [bp+8]
+ending_pos_y equ [bp+6]
+color equ [bp+4]
+	push bp
+	mov bp,sp
+	push di
+	push si
+	
+	mov si,starting_pos_y
+print_squre_y:
+	mov di,starting_pos_x
+print_squre_x:
+	push di
+	push si
+	push color
+	call print_char
+	inc di
+	cmp di,ending_pos_x
+	jne print_squre_x
 
+	inc si 
+	cmp si,ending_pos_y
+	jne print_squre_y
+	
+	pop si
+	pop di
+	pop bp
+	ret 10
+endp print_squre
+	
 proc check_pos
 x_pos equ [bp+4]
 y_pos equ [bp+6]
