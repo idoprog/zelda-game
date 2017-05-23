@@ -709,7 +709,10 @@ proc spawn_mons
 	push di
 	push si
 	
-	
+	push x_player_offset
+	push y_player_offset
+	push is_legal_offset
+	call check_for_press
 	
 	
 	push 25
@@ -815,6 +818,10 @@ left_road:
 	call print_char
 finish_spawn_mons:
 	
+	push x_player_offset
+	push y_player_offset
+	push is_legal_offset
+	call check_for_press
 	
 	
 	pop si
@@ -840,7 +847,12 @@ start:
 	push offset rand_num
 	push offset mons_num
 	call spawn_mons 
-	call endless_loop
+looping1:
+	push offset x_player
+	push offset y_player
+	push offset is_legal
+	call check_for_press
+	jmp looping1
 exit:
 	mov ax, 4c00h
 	int 21h
