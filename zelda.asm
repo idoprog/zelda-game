@@ -6,6 +6,10 @@ x_player dw 40
 y_player dw 12
 rand_num db ?
 is_legal db ?
+x_mons_arr dw ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
+y_mons_arr dw ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
+hp_mons_arr db ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
+mons_num dw 0
 CODESEG
 proc print_black_board
 	push bp
@@ -279,10 +283,11 @@ left_pressed:
 	push x_player_offset
 	push y_player_offset
 	call mov_left
-
+	jmp finish_check_for_press
+	
 not_legal1:
-	push 2394h
-	push 3
+	push 10
+	push 9545
 	call play_sound
 finish_check_for_press:
 	mov ah,0Ch
@@ -448,7 +453,10 @@ color equ [bp+4]
 	push ax
 	push cx
 	push bx
-	
+	xor bx,bx
+	xor cx,cx
+	xor ax,ax
+	xor dx,dx
 	mov dl,x
 	mov dh,y  
 	mov bx, 0      
@@ -494,8 +502,9 @@ time_loop:
 	ret 2
 endp timer
 
-proc random_1to4
+proc random_num
 rand_num_offset equ [bp+4]
+dvidor equ [bp+6]
 	push bp
 	mov bp,sp
 	push cx
@@ -506,7 +515,7 @@ rand_num_offset equ [bp+4]
 	int 21h
 	mov al,dl
 	xor ah,ah
-	mov bl,25
+	mov bl,dvidor
 	div bl
 	mov bx,rand_num_offset
 	mov [byte ptr bx],al
@@ -515,8 +524,8 @@ rand_num_offset equ [bp+4]
 	pop dx
 	pop cx
 	pop bp
-	ret 2
-endp random_1to4
+	ret 4
+endp random_num
 
 proc play_sound
 time_to_play equ [bp+6]
@@ -524,18 +533,28 @@ note equ [bp+4]
 	push bp
 	mov bp,sp
 	push ax
-	xor ax,ax
-	mov al, 182         
-    out 43h, al       
-    mov ax,note                            
-    out 42h, al         
-    mov al, ah         
-    out 42h, al 
-    in  al, 61h                                 
+	
+    ;start speaker
+	in  al, 61h                                 
     or  al, 00000011b   
     out 61h, al         
 	
+	;chage ferq premission
+	mov al,0b6h
+	out 43h,al
 	
+	;changing freq
+	mov ax,note
+	out 42h,al
+	mov al,ah
+	out 42h,al
+	
+	
+	;;start timer to wanted time
+	push time_to_play
+	call timer 
+	
+	;stop sound
 	in al, 61h                          
     and al, 11111100b 
     out 61h, al
@@ -674,6 +693,138 @@ finish_legal_place:
 	ret 8
 endp legal_place
 
+proc spawn_mons
+	x_player_offset equ [bp+16]
+	y_player_offset equ [bp+14]
+	is_legal_offset equ [bp+12]
+	x_mons_arr_offset equ [bp+10]
+	y_mons_arr_offset equ [bp+8]
+	rand_num_offset equ [bp+6]
+	mons_num_offset equ [bp+4]
+
+	push bp
+	mov bp,sp
+	push cx
+	push bx
+	push di
+	push si
+	
+	
+	
+	
+	push 25
+	push rand_num_offset
+	call random_num
+	mov bx,rand_num_offset
+	cmp [byte ptr bx],1
+	je up_road
+	cmp [byte ptr bx],2
+	je right_road
+	cmp [byte ptr bx],3
+	je down_road
+	jne left_road
+	
+up_road:
+	push 10
+	push rand_num_offset
+	call random_num
+	mov bx,rand_num_offset
+	mov si,35
+	add si,[word ptr bx]
+	mov di,mons_num_offset
+	mov cx,[word ptr di]
+	mov di,cx
+	mov bx,x_mons_arr_offset
+	mov [word ptr bx+di],si
+	mov bx,y_mons_arr_offset
+	mov [word ptr bx+di],0
+	
+	mov bx,x_mons_arr_offset
+	push [word ptr bx+di]
+	mov bx,y_mons_arr_offset
+	push [word ptr bx+di]
+	push 4 
+	call print_char
+	jmp finish_spawn_mons
+	
+	
+right_road:
+	push 20
+	push rand_num_offset
+	call random_num
+	mov bx,rand_num_offset
+	mov si,9
+	add si,[word ptr bx]
+	mov di,mons_num_offset
+	mov cx,[word ptr di]
+	mov di,cx
+	mov bx,x_mons_arr_offset
+	mov [word ptr bx+di],79
+	mov bx,y_mons_arr_offset
+	mov [word ptr bx+di],si
+	
+	mov bx,x_mons_arr_offset
+	push [word ptr bx+di]
+	mov bx,y_mons_arr_offset
+	push [word ptr bx+di]
+	push 4
+	call print_char
+	jmp finish_spawn_mons
+down_road:
+	push 10
+	push rand_num_offset
+	call random_num
+	mov bx,rand_num_offset
+	mov si,35
+	add si,[word ptr bx]
+	mov di,mons_num_offset
+	mov cx,[word ptr di]
+	mov di,cx
+	mov bx,x_mons_arr_offset
+	mov [word ptr bx+di],si
+	mov bx,y_mons_arr_offset
+	mov [word ptr bx+di],24
+	
+	mov bx,x_mons_arr_offset
+	push [word ptr bx+di]
+	mov bx,y_mons_arr_offset
+	push [word ptr bx+di]
+	push 4 
+	call print_char
+	jmp finish_spawn_mons
+left_road:
+	push 20
+	push rand_num_offset
+	call random_num
+	mov bx,rand_num_offset
+	mov si,9
+	add si,[word ptr bx]
+	mov di,mons_num_offset
+	mov cx,[word ptr di]
+	mov di,cx
+	mov bx,x_mons_arr_offset
+	mov [word ptr bx+di],80
+	mov bx,y_mons_arr_offset
+	mov [word ptr bx+di],si
+	
+	mov bx,x_mons_arr_offset
+	push [word ptr bx+di]
+	mov bx,y_mons_arr_offset
+	push [word ptr bx+di]
+	push 4 
+	call print_char
+finish_spawn_mons:
+	
+	
+	
+	pop si
+	pop di
+	pop bx
+	pop cx
+	pop bp
+	ret 14
+endp spawn_mons
+
 
 start:
 	mov ax,@data
@@ -681,12 +832,15 @@ start:
 	push offset x_player
 	push offset y_player
 	call print_game_board
-looping1:
 	push offset x_player
 	push offset y_player
 	push offset is_legal
-	call check_for_press
-	jmp looping1
+	push offset x_mons_arr
+	push offset y_mons_arr
+	push offset rand_num
+	push offset mons_num
+	call spawn_mons 
+	call endless_loop
 exit:
 	mov ax, 4c00h
 	int 21h
