@@ -10,6 +10,8 @@ x_mons_arr dw ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
 y_mons_arr dw ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
 hp_mons_arr db ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
 mons_num dw 0
+mons_x_mov_helper dw ?
+mons_y_mov_helper dw ?
 CODESEG
 proc print_black_board
 	push bp
@@ -232,6 +234,7 @@ up_pressed:
 	
 	push x_player_offset
 	push y_player_offset
+	push 1
 	call mov_up
 	jmp finish_check_for_press
 	
@@ -248,6 +251,7 @@ down_pressed:
 	
 	push x_player_offset
 	push y_player_offset
+	push 1
 	call mov_down
 	jmp finish_check_for_press
 
@@ -265,6 +269,7 @@ right_pressed:
 	
 	push x_player_offset
 	push y_player_offset
+	push 1
 	call mov_right
 	jmp finish_check_for_press
 
@@ -282,6 +287,7 @@ left_pressed:
 	
 	push x_player_offset
 	push y_player_offset
+	push 1
 	call mov_left
 	jmp finish_check_for_press
 	
@@ -305,8 +311,9 @@ endp check_for_press
 	
 	
 proc mov_up
-x_player_offset equ [bp+6]
-y_player_offset equ [bp+4]
+x_player_offset equ [bp+8]
+y_player_offset equ [bp+6]
+color equ [bp+4]
 	push bp
 	mov bp,sp
 	push bx
@@ -328,18 +335,19 @@ y_player_offset equ [bp+4]
 	mov cx,[bx] ;cx = y
 	push ax
 	push cx
-	push 1
+	push color
 	call print_char
 	pop cx
 	pop ax
 	pop bx
 	pop bp
-	ret 4
+	ret 6
 endp mov_up
 
 proc mov_down	
-x_player_offset equ [bp+6]
-y_player_offset equ [bp+4]
+x_player_offset equ [bp+8]
+y_player_offset equ [bp+6]
+color equ [bp+4]
 	push bp
 	mov bp,sp
 	push bx
@@ -361,18 +369,19 @@ y_player_offset equ [bp+4]
 	mov cx,[bx] ;cx = y
 	push ax
 	push cx
-	push 1
+	push color
 	call print_char
 	pop cx
 	pop ax
 	pop bx
 	pop bp
-	ret 4
+	ret 6
 endp mov_down
 
 proc mov_right	
-x_player_offset equ [bp+6]
-y_player_offset equ [bp+4]
+x_player_offset equ [bp+8]
+y_player_offset equ [bp+6]
+color equ [bp+4]
 	push bp
 	mov bp,sp
 	push bx
@@ -394,18 +403,19 @@ y_player_offset equ [bp+4]
 	mov cx,[bx] ;cx = y
 	push ax
 	push cx
-	push 1
+	push color
 	call print_char
 	pop cx
 	pop ax
 	pop bx
 	pop bp
-	ret 4
+	ret 6
 endp mov_right
 	
 proc mov_left	
-x_player_offset equ [bp+6]
-y_player_offset equ [bp+4]
+x_player_offset equ [bp+8]
+y_player_offset equ [bp+6]
+color equ [bp+4]
 	push bp
 	mov bp,sp
 	push bx
@@ -429,14 +439,14 @@ y_player_offset equ [bp+4]
 	mov cx,[bx] ;cx = y
 	push ax
 	push cx
-	push 1
+	push color
 	call print_char
 	
 	pop cx
 	pop ax
 	pop bx
 	pop bp
-	ret 4
+	ret 6
 endp mov_left
 
 	
@@ -501,6 +511,37 @@ time_loop:
 	pop bp 
 	ret 2
 endp timer
+
+proc timer1
+x_player_offset equ [bp+10]
+y_player_offset equ [bp+8]
+is_legal_offset equ [bp+6]
+	push bp
+	mov bp,sp
+	push ax
+	push cx
+	push dx
+	mov ah,2Ch
+setting_time1:
+	int 21h
+	mov al,dl
+time_loop1:
+	int 21h
+	push x_player_offset
+	push y_player_offset
+	push is_legal_offset
+	call check_for_press
+	cmp al,dl
+	je time_loop1
+	dec [word ptr bp+4]
+	cmp [word ptr bp+4],0
+	jne setting_time1
+	pop dx
+	pop cx
+	pop ax
+	pop bp 
+	ret 8
+endp timer1
 
 proc random_num
 rand_num_offset equ [bp+4]
@@ -832,6 +873,243 @@ finish_spawn_mons:
 	ret 14
 endp spawn_mons
 
+proc mov_mons
+x_player_offset equ [bp+18]
+y_player_offset equ [bp+16]
+is_legal_offset equ [bp+14]
+x_mons_arr_offset equ [bp+12]
+y_mons_arr_offset equ [bp+10]
+mons_num_offset equ [bp+8]
+x_helper_offset equ [bp+6]
+y_helper_offset equ [bp+4]
+	push bp
+	mov bp,sp
+	push ax
+	push bx
+	push cx
+	push dx
+	push si
+	push di
+	
+	push x_player_offset
+	push y_player_offset
+	push is_legal_offset
+	call check_for_press
+	
+	mov bx,x_player_offset
+	mov ax, [word ptr bx] ;ax = x
+	
+	mov bx, y_player_offset
+	mov cx, [word ptr bx] ;cx = y
+	
+	mov bx,mons_num_offset
+	mov di,[word ptr bx] ;di = mons_num
+	
+	mov bx,x_mons_arr_offset
+	mov dx,[word ptr bx+di] ;dx = mons_x
+	
+	mov bx,y_mons_arr_offset
+	mov si,[word ptr bx+di] ;si = mons_y
+	
+	
+	cmp ax,dx
+	ja sub_ax_dx
+	jb sub_dx_ax
+	je up_or_down
+	
+sub_ax_dx:
+	mov bx,x_helper_offset
+	mov [word ptr bx],1 ;1 = x player is bigger
+	sub ax,dx
+	cmp ax,8
+	jbe up_or_down
+	ja y_check
+sub_dx_ax:
+	mov bx,x_helper_offset
+	mov [word ptr bx],0 ;0 = x monster is bigger
+	sub dx,ax
+	cmp dx,8
+	jbe up_or_down
+	ja y_check
+up_or_down:
+	cmp cx,si
+	ja mons_mov_down
+	jb mons_mov_up
+	je right_or_left
+	
+right_or_left:
+	mov bx,x_helper_offset
+	cmp [word ptr bx],0
+	je mons_mov_left
+	jne mons_mov_right
+y_check:
+	cmp cx,si
+	ja sub_cx_si
+	jb sub_si_cx
+	je right_or_left
+	
+sub_cx_si:
+	mov bx,y_helper_offset
+	mov [word ptr bx],1 ;1 = y player is bigger
+	sub cx,si
+	cmp cx,7
+	jbe right_or_left
+	ja check_sector
+sub_si_cx:
+	mov bx,y_helper_offset
+	mov [word ptr bx],0 ;0 = y monster is bigger
+	sub si,cx
+	cmp si,7
+	jbe right_or_left
+	ja check_sector
+check_sector:
+	mov bx,x_helper_offset
+	cmp [word ptr bx],1
+	je keep_check_sector1
+	jne keep_check_sector2
+keep_check_sector1:
+	mov bx,y_helper_offset
+	cmp [word ptr bx],1
+	je mons_mov_up
+	jne mons_mov_down
+keep_check_sector2:
+	mov bx,y_helper_offset
+	cmp [byte ptr bx],1
+	je mons_mov_right
+	jne mons_mov_left
+	
+mons_mov_up:
+	mov bx,x_mons_arr_offset
+	mov dx,[word ptr bx+di]
+	
+	mov bx,x_helper_offset
+	mov [word ptr bx],dx
+	
+	mov bx,y_mons_arr_offset
+	mov si,[word ptr bx+di]
+	
+	mov bx,y_helper_offset
+	mov [word ptr bx],si
+	
+	push x_helper_offset
+	push y_helper_offset
+	push 4 
+	call mov_up
+	
+	mov bx,x_helper_offset
+	mov dx,[word ptr bx]
+	mov bx,x_mons_arr_offset
+	mov [word ptr bx+di],dx
+	
+	mov bx,y_helper_offset
+	mov si,[word ptr bx]
+	mov bx,y_mons_arr_offset
+	mov [word ptr bx+di],si
+	
+	jmp finish_mons_mov
+mons_mov_down:
+	mov bx,x_mons_arr_offset
+	mov dx,[word ptr bx+di]
+	
+	mov bx,x_helper_offset
+	mov [word ptr bx],dx
+	
+	mov bx,y_mons_arr_offset
+	mov si,[word ptr bx+di]
+	
+	mov bx,y_helper_offset
+	mov [word ptr bx],si
+	
+	push x_helper_offset
+	push y_helper_offset
+	push 4 
+	call mov_down
+	
+	mov bx,x_helper_offset
+	mov dx,[word ptr bx]
+	mov bx,x_mons_arr_offset
+	mov [word ptr bx+di],dx
+	
+	mov bx,y_helper_offset
+	mov si,[word ptr bx]
+	mov bx,y_mons_arr_offset
+	mov [word ptr bx+di],si
+	
+	jmp finish_mons_mov
+mons_mov_left:
+	mov bx,x_mons_arr_offset
+	mov dx,[word ptr bx+di]
+	
+	mov bx,x_helper_offset
+	mov [word ptr bx],dx
+	
+	mov bx,y_mons_arr_offset
+	mov si,[word ptr bx+di]
+	
+	mov bx,y_helper_offset
+	mov [word ptr bx],si
+	
+	push x_helper_offset
+	push y_helper_offset
+	push 4 
+	call mov_left
+	
+	mov bx,x_helper_offset
+	mov dx,[word ptr bx]
+	mov bx,x_mons_arr_offset
+	mov [word ptr bx+di],dx
+	
+	mov bx,y_helper_offset
+	mov si,[word ptr bx]
+	mov bx,y_mons_arr_offset
+	mov [word ptr bx+di],si
+	
+	jmp finish_mons_mov
+mons_mov_right:
+	mov bx,x_mons_arr_offset
+	mov dx,[word ptr bx+di]
+	
+	mov bx,x_helper_offset
+	mov [word ptr bx],dx
+	
+	mov bx,y_mons_arr_offset
+	mov si,[word ptr bx+di]
+	
+	mov bx,y_helper_offset
+	mov [word ptr bx],si
+	
+	push x_helper_offset
+	push y_helper_offset
+	push 4 
+	call mov_right
+	
+	mov bx,x_helper_offset
+	mov dx,[word ptr bx]
+	mov bx,x_mons_arr_offset
+	mov [word ptr bx+di],dx
+	
+	mov bx,y_helper_offset
+	mov si,[word ptr bx]
+	mov bx,y_mons_arr_offset
+	mov [word ptr bx+di],si
+	
+	
+finish_mons_mov:
+	push x_player_offset
+	push y_player_offset
+	push is_legal_offset
+	push 20 
+	call timer1
+	
+	pop di 
+	pop si
+	pop dx
+	pop cx
+	pop bx
+	pop ax
+	pop bp
+	ret 16
+endp mov_mons
 
 start:
 	mov ax,@data
@@ -848,6 +1126,17 @@ start:
 	push offset mons_num
 	call spawn_mons 
 looping1:
+
+	push offset x_player
+	push offset y_player
+	push offset is_legal
+	push offset x_mons_arr
+	push offset y_mons_arr
+	push offset mons_num
+	push offset mons_x_mov_helper
+	push offset mons_y_mov_helper
+	call mov_mons
+
 	push offset x_player
 	push offset y_player
 	push offset is_legal
