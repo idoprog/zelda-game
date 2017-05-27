@@ -3,7 +3,7 @@ MODEL small
 STACK 100h
 DATASEG
 x_player dw 40
-y_player dw 1
+y_player dw 12
 rand_num db ?
 is_legal db ?
 x_mons_arr dw ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
@@ -12,6 +12,7 @@ hp_mons_arr db ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
 mons_num dw 0
 mons_x_mov_helper dw ?
 mons_y_mov_helper dw ?
+is_near db ?,?,?,?
 CODESEG
 proc print_black_board
 	push bp
@@ -1167,7 +1168,7 @@ finish_mons_mov:
 	push x_player_offset
 	push y_player_offset
 	push is_legal_offset
-	push 20 
+	push 6
 	call timer1
 	
 	pop di 
@@ -1180,37 +1181,102 @@ finish_mons_mov:
 	ret 16
 endp mov_mons
 
+proc check_near
+x equ [bp+10]
+y equ [bp+8]
+is_near_offset equ [bp+6]
+color equ [bp+4]
+	push bp
+	mov bp,sp
+	push dx
+	push bx
+	push cx
+	push ax
+	push di
+	
+	mov dl,x
+	mov dh,y
+	mov bh,0
+	
+up_checker:
+	dec dh
+	mov ah,2 
+	int 10h
+	mov ah,8
+	int 10h
+	cmp ah,color
+	jne down_checker
+	mov di,is_near_offset
+	mov [byte ptr di+2],1
+	
+down_checker:
+	add dh,2
+	mov ah,2
+	int 10h
+	mov ah,8
+	int 10h
+	cmp ah,color
+	jne left_checker
+	mov [byte ptr di+1],1
+
+left_checker:
+	dec dh
+	dec dl
+	mov ah,2
+	int 10h
+	mov ah,8
+	int 10h
+	cmp ah,color 
+	jne right_checker
+	mov [byte ptr di],1
+	
+right_checker:
+	add dl,2
+	mov ah,2
+	int 10h
+	mov ah,8
+	int 10h
+	cmp ah,color 
+	jne finish_check_near
+	mov [byte ptr di+3],1
+	
+finish_check_near:
+	pop di
+	pop ax
+	pop cx
+	pop bx
+	pop dx
+	pop bp
+	ret 8
+endp check_near
+
 start:
 	mov ax,@data
 	mov ds,ax
 	push offset x_player
 	push offset y_player
 	call print_game_board
-	push offset x_player
-	push offset y_player
-	push offset is_legal
-	push offset x_mons_arr
-	push offset y_mons_arr
-	push offset rand_num
-	push offset mons_num
-	call spawn_mons 
-looping1:
-
-	push offset x_player
-	push offset y_player
-	push offset is_legal
-	push offset x_mons_arr
-	push offset y_mons_arr
-	push offset mons_num
-	push offset mons_x_mov_helper
-	push offset mons_y_mov_helper
-	call mov_mons
-
-	push offset x_player
-	push offset y_player
-	push offset is_legal
-	call check_for_press
-	jmp looping1
+	push 41
+	push 12
+	push 4
+	call print_char
+	push 39
+	push 12
+	push 4
+	call print_char
+	push 40
+	push 11
+	push 4
+	call print_char
+	push 40
+	push 13
+	push 4
+	call print_char
+	push 40
+	push 12
+	push offset is_near
+	push 4
+	call check_near
 exit:
 	mov ax, 4c00h
 	int 21h
