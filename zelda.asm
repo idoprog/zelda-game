@@ -3,7 +3,7 @@ MODEL small
 STACK 100h
 DATASEG
 x_player dw 40
-y_player dw 12
+y_player dw 1
 rand_num db ?
 is_legal db ?
 x_mons_arr dw ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
@@ -655,6 +655,10 @@ keep_check_lefting1:
 keep_check_lefting2:
 	cmp ax,0
 	je not_legal
+	jne keep_check_lefting3
+keep_check_lefting3:
+	cmp ax,79
+	je not_legal
 	jne it_legal
 	
 	
@@ -688,7 +692,7 @@ keep_check_uping:
 	jbe not_legal
 	ja keep_check_uping1
 keep_check_uping1:
-	cmp ax,46
+	cmp ax,45
 	jae not_legal
 	jb keep_check_uping2
 keep_check_uping2:
@@ -715,8 +719,11 @@ keep_check_righting1:
 keep_check_righting2:
 	cmp ax,79
 	je not_legal
+	jne keep_check_righting3
+keep_check_righting3:
+	cmp ax,0
+	je not_legal
 	jne it_legal
-	
 	
 	
 it_legal:
@@ -965,18 +972,8 @@ sub_si_cx:
 check_sector:
 	mov bx,x_helper_offset
 	cmp [word ptr bx],1
-	je keep_check_sector1
-	jne keep_check_sector2
-keep_check_sector1:
-	mov bx,y_helper_offset
-	cmp [word ptr bx],1
-	je mons_mov_up
-	jne mons_mov_down
-keep_check_sector2:
-	mov bx,y_helper_offset
-	cmp [byte ptr bx],1
-	je mons_mov_right
-	jne mons_mov_left
+	je up_or_down
+	jne right_or_left
 	
 mons_mov_up:
 	mov bx,x_mons_arr_offset
@@ -991,6 +988,24 @@ mons_mov_up:
 	mov bx,y_helper_offset
 	mov [word ptr bx],si
 	
+	push dx
+	push si
+	push is_legal_offset
+	push 3
+	call legal_place
+	
+	mov bx,is_legal_offset
+	cmp [byte ptr bx],0
+	jne right_mov_up
+	
+	mov bx,x_player_offset
+	mov ax,[word ptr bx]
+	cmp ax,dx
+	ja mons_mov_right
+	jb mons_mov_left
+	
+	
+right_mov_up:
 	push x_helper_offset
 	push y_helper_offset
 	push 4 
@@ -1007,6 +1022,7 @@ mons_mov_up:
 	mov [word ptr bx+di],si
 	
 	jmp finish_mons_mov
+	
 mons_mov_down:
 	mov bx,x_mons_arr_offset
 	mov dx,[word ptr bx+di]
@@ -1020,6 +1036,23 @@ mons_mov_down:
 	mov bx,y_helper_offset
 	mov [word ptr bx],si
 	
+	push dx
+	push si
+	push is_legal_offset
+	push 2
+	call legal_place
+	
+	mov bx,is_legal_offset
+	cmp [byte ptr bx],0
+	jne right_mov_down
+	
+	mov bx,x_player_offset
+	mov ax,[word ptr bx]
+	cmp ax,dx
+	ja mons_mov_right
+	jb mons_mov_left
+	
+right_mov_down:
 	push x_helper_offset
 	push y_helper_offset
 	push 4 
@@ -1036,6 +1069,7 @@ mons_mov_down:
 	mov [word ptr bx+di],si
 	
 	jmp finish_mons_mov
+	
 mons_mov_left:
 	mov bx,x_mons_arr_offset
 	mov dx,[word ptr bx+di]
@@ -1049,6 +1083,23 @@ mons_mov_left:
 	mov bx,y_helper_offset
 	mov [word ptr bx],si
 	
+	push dx
+	push si
+	push is_legal_offset
+	push 1
+	call legal_place
+	
+	mov bx,is_legal_offset
+	cmp [byte ptr bx],0
+	jne right_mov_left
+	
+	mov bx,y_player_offset
+	mov cx,[word ptr bx]
+	cmp cx,si
+	ja mons_mov_down
+	jb mons_mov_up
+	
+right_mov_left:
 	push x_helper_offset
 	push y_helper_offset
 	push 4 
@@ -1065,6 +1116,7 @@ mons_mov_left:
 	mov [word ptr bx+di],si
 	
 	jmp finish_mons_mov
+	
 mons_mov_right:
 	mov bx,x_mons_arr_offset
 	mov dx,[word ptr bx+di]
@@ -1078,6 +1130,23 @@ mons_mov_right:
 	mov bx,y_helper_offset
 	mov [word ptr bx],si
 	
+	push dx
+	push si
+	push is_legal_offset
+	push 4
+	call legal_place
+	
+	mov bx,is_legal_offset
+	cmp [byte ptr bx],0
+	jne right_mov_right
+	
+	mov bx,y_player_offset
+	mov cx,[word ptr bx]
+	cmp cx,si
+	ja mons_mov_down
+	jb mons_mov_up
+	
+right_mov_right:
 	push x_helper_offset
 	push y_helper_offset
 	push 4 
