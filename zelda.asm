@@ -20,7 +20,7 @@ DATASEG
 	;printing bmps vars
 	los db 'los.bmp',0
 	won db 'won.bmp',0
-	file db '1.bmp',0
+	file db '6.bmp',0
 	Header db 54 dup (0)
 	Palette db 256*4 dup (0)
 	ScrLine db 320 dup (0)
@@ -2135,11 +2135,11 @@ PrintLoop:
 	int 16h
 	jnz start_game
 	
-	inc [byte ptr file]
-	cmp [byte ptr file], '7'
+	dec [byte ptr file]
+	cmp [byte ptr file], '0'
 	jne PrintLoop
 reset: 
-	sub [byte ptr file],6
+	add [byte ptr file],6
 	jmp PrintLoop
 	
 start_game:
@@ -2167,8 +2167,11 @@ start_game:
 	push offset num_position
 	push offset live_mons
 	call manage_game
-looping:
-	jmp looping
+	mov ah,0
+	int 16h
+	
+	mov ax, 3
+	int 10h
 	
 	
 exit:
