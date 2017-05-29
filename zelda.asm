@@ -2,23 +2,24 @@ IDEAL
 MODEL small
 STACK 100h
 DATASEG
-	x_player dw 40
-	y_player dw 12
-	hp_player db 3
-	rand_num db ?
-	is_legal db ?
-	x_mons_arr dw ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
-	y_mons_arr dw ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
-	hp_mons_arr db ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
-	mons_num dw 0
-	mons_x_mov_helper dw ?
-	mons_y_mov_helper dw ?
-	is_near db ?,?,?,?
-	num_position dw ?
-	live_mons db 1
-	player_status db ?
-	attacked db ?
-
+	x_player dw 40 ;it remembers the x of the player
+	y_player dw 12 ;it remembers the y of the player
+	hp_player db 3 ;it remembers the health of the player
+	rand_num db ? ;after the randomize num procedure this num is put in this var
+	is_legal db ? ;after checking the place in legal_place procedure it puts 1 or 0 in this if the move is legal or illegal
+	x_mons_arr dw ?,?,?,?,?,?,?,?,?,?,?,?,?,?,? ;array of all the x of the monsters
+	y_mons_arr dw ?,?,?,?,?,?,?,?,?,?,?,?,?,?,? ;array of all the y of the monsters
+	hp_mons_arr db ?,?,?,?,?,?,?,?,?,?,?,?,?,?,? ;array of the health of every monster
+	mons_num dw 0 ;it's the monster counter now
+	mons_x_mov_helper dw ? ;it helps with x values in the mons_mov procedure
+	mons_y_mov_helper dw ? ;it helps with y values in the mons_mov procedure
+	is_near db ?,?,?,? ;it helps in the check_near procedure if the first place is 1 = there's a painted pixel on the left if the second one is 1 = there is a pixel down and etc...
+	num_position dw ? ;it helps in check_array procedure using this the procedure returns the value with this var 
+	live_mons db 1 ;how many monsters to print this round
+	attacked db ? ;it helps in the mons_attack if the mons_attacked the value is changed to 1
+	;printing bmps vars
+	los db 'los.bmp',0
+	won db 'won.bmp',0
 	file db '1.bmp',0
 	Header db 54 dup (0)
 	Palette db 256*4 dup (0)
@@ -73,10 +74,10 @@ row:
 endp print_black_board
 
 
-;this procedure prints the game board with the main character in the middle in the start position using another procedure that prints squares in colors
-;inputs: the offset of the player x,the offset of the player y
-;outputs: none
-;goal: prints game start board with the player 
+; this procedure prints the game board with the main character in the middle in the start position using another procedure that prints squares in colors
+; inputs: the offset of the player x,the offset of the player y
+; outputs: none
+; goal: prints game start board with the player 
 proc print_game_board
 offset_x_player equ [bp+6] ;getting the pushed values
 offset_y_player equ [bp+4] ;and renaming them so it will be easy to use them
@@ -172,11 +173,11 @@ offset_y_player equ [bp+4] ;and renaming them so it will be easy to use them
 	ret 4 ;to pushed values it needs to clean 4 bytes for the ss
 endp print_game_board
 
-;this procedure prints squre in selected color starting in the starting pixel that is given by the programmer and ending the square in a selected position pushed by the programmer
-;it print using another function that prints 1 pixel
-;inputs: starting x,starting y,ending x,ending y,and color to print the square
-;outputs:none
-;goal:print square in color
+; this procedure prints squre in selected color starting in the starting pixel that is given by the programmer and ending the square in a selected position pushed by the programmer
+; it print using another function that prints 1 pixel
+; inputs: starting x,starting y,ending x,ending y,and color to print the square
+; outputs:none
+; goal:print square in color
 proc print_squre
 starting_pos_x equ [bp+12] ;renaming the pushed values so it will be easy to work with them
 starting_pos_y equ [bp+10]
@@ -210,12 +211,12 @@ print_squre_x:
 	pop bp
 	ret 10 ;5 pushed values so ret 10 to clear 10 bytes from ss
 endp print_squre
-;this procedure is one of the main procedures of the program using int 16h ah=1 interrupt this procedure read the last value that entered the keyboard buffer
-;so using that the player move and attack
-;inputs:the offset of x player,the offset of y player,is legal offset (a helper var,see above),is near offset (a helper var,see above),array contaning x values of monsters,array contaning y values of monsters
-;		array contaning hp values of monsters,num position offset (a helper var,see above),counter var of live monster
-;outputs:updated x and y values,live monster counter updated
-;goal:respond to player clicking on the keyboard by action that suits the press
+; this procedure is one of the main procedures of the program using int 16h ah=1 interrupt this procedure read the last value that entered the keyboard buffer
+; so using that the player move and attack
+; inputs:the offset of x player,the offset of y player,is legal offset (a helper var,see above),is near offset (a helper var,see above),array contaning x values of monsters,array contaning y values of monsters
+		; array contaning hp values of monsters,num position offset (a helper var,see above),counter var of live monster
+; outputs:updated x and y values,live monster counter updated
+; goal:respond to player clicking on the keyboard by action that suits the press
 proc check_for_press
 x_player_offset equ [bp+20] ;renaming pushed values for easier mangement
 y_player_offset equ [bp+18]
@@ -468,10 +469,10 @@ finish_check_for_press:
 	ret 18 ;9 pushed values so it's 18 byte to clean from ss
 endp check_for_press
 	
-;this procedure prints brown pixel in previuos postion and colors pixel in updated location the color is chosen by the user the updated position is up to the previuos
-;inputs:x offset,y offset,color of the pixel
-;outputs:none 
-;goal:"moving" pixel palce by raplacing the last position with the new 
+; this procedure prints brown pixel in previuos postion and colors pixel in updated location the color is chosen by the user the updated position is up to the previuos
+; inputs:x offset,y offset,color of the pixel
+; outputs:none 
+; goal:"moving" pixel palce by raplacing the last position with the new 
 proc mov_up
 x_player_offset equ [bp+8]
 y_player_offset equ [bp+6]
@@ -621,9 +622,9 @@ color equ [bp+4]
 endp mov_left
 
 	
-;this procedure is checking if a number is in a array if it's in the array in returns it's position in a var if it's not in the array it returns 70 (high imposibble value) in the var
-;inputs:number to search,the array offset,array length,and a num position offset (a helper var,see above)
-;outputs:number position in array if it's not in the array returns 70 (returns using var)
+; this procedure is checking if a number is in a array if it's in the array in returns it's position in a var if it's not in the array it returns 70 (high imposibble value) in the var
+; inputs:number to search,the array offset,array length,and a num position offset (a helper var,see above)
+; outputs:number position in array if it's not in the array returns 70 (returns using var)
 proc check_array
 number equ [bp+10] ;renaming pushed values for easier working with them
 array_offset equ [bp+8]
@@ -665,10 +666,10 @@ finish_check_array:
 	ret 8 ;4 pushed values so it's 8 bytes to clean from the ss
 endp check_array
 
-;this procedure prints the ascii 219 char which is a full text slot (also called DB) in a given value and color
-;inputs:x,y,color
-;outputs:none
-;goal:print a pixel in a give location and color
+; this procedure prints the ascii 219 char which is a full text slot (also called DB) in a given value and color
+; inputs:x,y,color
+; outputs:none
+; goal:print a pixel in a give location and color
 proc print_char
 x equ [bp+8] ;pushed values
 y equ [bp+6]
@@ -703,11 +704,11 @@ color equ [bp+4]
 	ret 6 ;3 pushed values then it's 6 bytes to clean from ss
 endp print_char
 
-;this procedure is waiting a given time of miliseconds using the ah 2ch interrupt to get system time and moving it to a register and calling it agian untill the equallity is broken and then a milisecond passed
-;and then doing that a given time
-;inputs:miliseconds to wait
-;output:none 
-;goal:waiting a miliseconds
+; this procedure is waiting a given time of miliseconds using the ah 2ch interrupt to get system time and moving it to a register and calling it agian untill the equallity is broken and then a milisecond passed
+; and then doing that a given time
+; inputs:miliseconds to wait
+; output:none 
+; goal:waiting a miliseconds
 proc timer
 	push bp
 	mov bp,sp ;pushing used registers
@@ -731,11 +732,11 @@ time_loop:
 	pop bp 
 	ret 2 ;one push value so it needs to clean 2 bytes of memory
 endp timer
-;same as timer procedure but here there is the check_for_press procedure so that even when it waits time the player could move
-;inputs: position x of player offset,position y of player offset,is legal (helper var,see above),is near (healper var,see above),monster x array offset,monster y array offset,monster health offset
-;		num position offset (helper var,see above),live monster counter
-;outputs:none
-;goal:wait time and let the player move in that time 
+; same as timer procedure but here there is the check_for_press procedure so that even when it waits time the player could move
+; inputs: position x of player offset,position y of player offset,is legal (helper var,see above),is near (healper var,see above),monster x array offset,monster y array offset,monster health offset
+		; num position offset (helper var,see above),live monster counter
+; outputs:none
+; goal:wait time and let the player move in that time 
 proc timer1
 x_player_offset equ [bp+22] 
 y_player_offset equ [bp+20]
@@ -780,11 +781,11 @@ time_loop1:
 	pop bp 
 	ret 20
 endp timer1
-;this procedure randomize a number zero to give number (not included) it calls system time and divide the miliseconds in a number that can create on of your random options
-;for exmple: the dividor sent-25 and we divide it by system miliseconds for exmple:46 46/25=1 (and ingnoring the reminder) we get our number 1 (which is from 0-3 4 options)
-;input: random num offset (helper var,see above),dividor which is the number to divide
-;output:using the rand_num_offset pushed value we output the result through
-;goal:randomize num using dividor
+; this procedure randomize a number zero to give number (not included) it calls system time and divide the miliseconds in a number that can create on of your random options
+; for exmple: the dividor sent-25 and we divide it by system miliseconds for exmple:46 46/25=1 (and ingnoring the reminder) we get our number 1 (which is from 0-3 4 options)
+; input: random num offset (helper var,see above),dividor which is the number to divide
+; output:using the rand_num_offset pushed value we output the result through
+; goal:randomize num using dividor
 proc random_num
 rand_num_offset equ [bp+4] ;renaming pushed values for easier use
 dvidor equ [bp+6]
@@ -809,8 +810,8 @@ dvidor equ [bp+6]
 	pop bp
 	ret 4 ;2 pushed values so it's 4 bytes to clean from ss
 endp random_num
-;this procedure play sound from given number that number can be achived by dividing a contant number with the frequncy of the note and outputing that number to ports using in and out 
-;inputs:note after dividing,time to play that note
+; this procedure play sound from given number that number can be achived by dividing a contant number with the frequncy of the note and outputing that number to ports using in and out 
+; inputs:note after dividing,time to play that note
 proc play_sound
 time_to_play equ [bp+6] ;renaming pushed values for easier use
 note equ [bp+4]
@@ -846,11 +847,65 @@ note equ [bp+4]
 	pop bp
 	ret 4 ;two oushed values so it's 4 byte to clean from ss
 endp play_sound
+
+proc play_sound1
+x_player_offset equ [bp+24]
+y_player_offset equ [bp+22]
+is_legal_offset equ [bp+20]
+is_near_offset equ [bp+18]
+x_mons_arr_offset equ [bp+16]
+y_mons_arr_offset equ [bp+14]
+hp_mons_arr_offset equ [bp+12]
+num_position_offset equ [bp+10]
+live_mons_offset equ [bp+8]
+time_to_play equ [bp+6] ;renaming pushed values for easier use
+note equ [bp+4]
+	push bp
+	mov bp,sp
+	push ax
 	
-;this procedure check if the place is legal using a position given by the programmer it also gets a direction from the programmer to know the movement 
-;inputs:x,y, is legal offset (helper var,see above),direction the direction of the move 
-;outputs:it outputs in is_legal 1 if the move is legal and 0 if it's illegal 
-;goal:check if a move is legal or illegal and do "beep" if illegal
+    ;start speaker
+	in  al, 61h                                 
+    or  al, 00000011b   
+    out 61h, al         
+	
+	;chage ferq premission
+	mov al,0b6h
+	out 43h,al
+	
+	;changing freq
+	mov ax,note
+	out 42h,al
+	mov al,ah
+	out 42h,al
+	
+	
+	;start timer to wanted time
+	push x_player_offset
+	push y_player_offset
+	push is_legal_offset
+	push is_near_offset
+	push x_mons_arr_offset
+	push y_mons_arr_offset
+	push hp_mons_arr_offset
+	push num_position_offset
+	push live_mons_offset
+	push time_to_play
+	call timer1
+	
+	;stop sound
+	in al, 61h                          
+    and al, 11111100b 
+    out 61h, al
+	pop ax
+	pop bp
+	ret 22 ;11 pushed values so it's 22 byte to clean from ss
+endp play_sound1
+	
+; this procedure check if the place is legal using a position given by the programmer it also gets a direction from the programmer to know the movement 
+; inputs:x,y, is legal offset (helper var,see above),direction the direction of the move 
+; outputs:it outputs in is_legal 1 if the move is legal and 0 if it's illegal 
+; goal:check if a move is legal or illegal and do "beep" if illegal
 proc legal_place
 x equ [bp+10] ;renaming pushed values for easier use
 y equ [bp+8]
@@ -979,11 +1034,11 @@ finish_legal_place:
 	ret 8
 endp legal_place
 
-;this procedure randomize a spawn from 4 roads and in every road it randomize specific slot in the road
-;inputs: player x offset, player y offset, is legal offset (helper var,see above),is near offset (helper var,see above), monster x array offset, monster y array offset, monster health array
-;		num position offset (helper var,see above),live monster counter, random number offset (helper var,see above),moster counter offset
-;outputs:updating the x and y monster array,updating monster health when spawning (3)
-;goal:spawn a monster in a randomized position
+; this procedure randomize a spawn from 4 roads and in every road it randomize specific slot in the road
+; inputs: player x offset, player y offset, is legal offset (helper var,see above),is near offset (helper var,see above), monster x array offset, monster y array offset, monster health array
+		; num position offset (helper var,see above),live monster counter, random number offset (helper var,see above),moster counter offset
+; outputs:updating the x and y monster array,updating monster health when spawning (3)
+; goal:spawn a monster in a randomized position
 proc spawn_mons
 	x_player_offset equ [bp+24] ;renaming pushed values so it's easier to use
 	y_player_offset equ [bp+22]
@@ -1480,10 +1535,10 @@ finish_mons_mov:
 	pop bp
 	ret 24
 endp mov_mons
-;this procedure gets a position and it checks the pixels near that position if the color match the color is given by the programmer
-;inputs:x,y,is near offset (helper var,see above),color
-;outputs:using is near offset array it moves 1 to every direction where the color that is given by the programmer is equal to the color near that pixel
-;goal:check if there is a monster or a player near a given position
+; this procedure gets a position and it checks the pixels near that position if the color match the color is given by the programmer
+; inputs:x,y,is near offset (helper var,see above),color
+; outputs:using is near offset array it moves 1 to every direction where the color that is given by the programmer is equal to the color near that pixel
+; goal:check if there is a monster or a player near a given position
 proc check_near
 x equ [bp+10] ;renaming the values for easier use
 y equ [bp+8]
@@ -1556,11 +1611,11 @@ finish_check_near:
 	pop bp
 	ret 8
 endp check_near
-;this procedure checks if a user is near her and the she attacks him 
-;inputs: player x offset, player y offset, is legal offset (helper var,see above),is near offset (helper var,see above), monster x array offset, monster y array offset, monster health array
-;		moster counter offset, num position offset (helper var,see above),hp player offset,attacked offset (helper var,see above),live monster offset
-;outputs:it's updating the hp of the player if attack
-;goal:to attack the player and beep
+; this procedure checks if a user is near her and the she attacks him 
+; inputs: player x offset, player y offset, is legal offset (helper var,see above),is near offset (helper var,see above), monster x array offset, monster y array offset, monster health array
+		; moster counter offset, num position offset (helper var,see above),hp player offset,attacked offset (helper var,see above),live monster offset
+; outputs:it's updating the hp of the player if attack
+; goal:to attack the player and beep
 proc mons_attack
 	x_player_offset equ [bp+26] ;renaming pushed values so it's easier to use
 	y_player_offset equ [bp+24]
@@ -1590,6 +1645,18 @@ proc mons_attack
 	mov bx,y_mons_arr_offset
 	mov di,[word ptr bx+si] ;di = y
 	
+	push x_player_offset
+	push y_player_offset
+	push is_legal_offset
+	push is_near_offset
+	push x_mons_arr_offset
+	push y_mons_arr_offset
+	push hp_mons_arr_offset
+	push num_position_offset
+	push live_mons_offset
+	push 10
+	call timer1
+	
 	;checking if near
 	push dx
 	push di 
@@ -1609,9 +1676,18 @@ proc mons_attack
 	dec [byte ptr bx]
 	mov bx,attacked_offset
 	;if attack it plays sound
+	push x_player_offset
+	push y_player_offset
+	push is_legal_offset
+	push is_near_offset
+	push x_mons_arr_offset
+	push y_mons_arr_offset
+	push hp_mons_arr_offset
+	push num_position_offset
+	push live_mons_offset
 	push 10
 	push 9545
-	call play_sound
+	call play_sound1
 	mov [byte ptr bx],1
 	;waiting 10 miliseconds while giving the player the ability to move
 	push x_player_offset
@@ -1638,14 +1714,14 @@ finish_mons_attack:
 	ret 24
 endp mons_attack
 
-;this procedure changes all the values of an array to zero
-;inputs:array offset,array length
-;outputs:none
-;goal:reset an array 
+; this procedure changes all the values of an array to zero
+; inputs:array offset,array length
+; outputs:none
+; goal:reset an array 
 proc clear_array
 array_offset equ [bp+6]
 array_length equ [bp+4]
-	push bx
+	push bp
 	mov bp,sp
 	push bx
 	push si
@@ -1665,13 +1741,14 @@ array_clear:
 endp clear_array
 
 
-;this procedure is runnig one game using all procedures and vars
-;inputs:every var except for var of printing a bmp (see above)
-;outputs:none
-;goal:run one game
+; this procedure is runnig one game using all procedures and vars
+; inputs:every var except for var of printing a bmp (see above)
+; outputs:none
+; goal:run one game
 proc manage_game
-	attacked_offset equ [bp+34]
-	player_status_offset equ [bp+32]
+	offset_won equ [bp+36]
+	offset_los equ [bp+34]
+	attacked_offset equ [bp+32]
 	x_player_offset equ [bp+30]
 	y_player_offset equ [bp+28]
 	hp_player_offset equ [bp+26]
@@ -1736,7 +1813,7 @@ mons_game:
 	jne mons_game_mov
 	mov bx,hp_player_offset ;if attacks it checks the player health
 	cmp [byte ptr bx],0
-	je finish_manage_game ;if he died the game is over
+	je lost ;if he died the game is over
 	jne ending
 mons_game_mov:
 	push x_player_offset
@@ -1770,21 +1847,26 @@ ending:
 	mov si,[word ptr bx]
 	mov bx,hp_mons_arr_offset
 	cmp [byte ptr bx+si],0
-	je finish_manage_game
+	je win
 	jmp mons_game
 
-	
+lost:
+	push offset_los
+	call PrintBMP1
+	jmp finish_manage_game	
+win:
+	push offset_won
+	call PrintBMP1
 finish_manage_game:
-	call print_black_board
 	pop cx
 	pop si
 	pop bx
 	pop bp
-	ret 32
+	ret 34
 endp manage_game
-;opens a file
-;input: offset file name
-;output: file's handle
+; opens a file
+; input: offset file name
+; output: file's handle
 proc OpenFile
 	push bp
 	mov bp, sp
@@ -1890,9 +1972,9 @@ PalLoop:
 	ret 2
 endp CopyPal
 
-;prints to the graphic screen the BMP file (after opening file, reading palette and copying it)
-;input: file handle
-;output: copying the BMP file from the file to the data segment to the A000 segment, the graphics screen
+; prints to the graphic screen the BMP file (after opening file, reading palette and copying it)
+; input: file handle
+; output: copying the BMP file from the file to the data segment to the A000 segment, the graphics screen
 proc CopyBitmap
 	push bp
 	mov bp, sp
@@ -1943,9 +2025,9 @@ PrintBMPLoop:
 	ret 2
 endp CopyBitmap
 
-;closes an open file
-;input: file handle
-;output: none
+; closes an open file
+; input: file handle
+; output: none
 proc CloseFile
 	push bp
 	mov bp, sp
@@ -1960,10 +2042,10 @@ proc CloseFile
 	ret 2
 endp CloseFile
 
-;this procedure prints to the screen a BMP file, doing all the things needed
-;opening the file, reading header, reading palette, copying the palette, copying the BMP, and closing the file
-;input: offset of file's name
-;output: moving to graphics mode and chaning the screen to the given BMP file
+; this procedure prints to the screen a BMP file, doing all the things needed
+; opening the file, reading header, reading palette, copying the palette, copying the BMP, and closing the file
+; input: offset of file's name
+; output: moving to graphics mode and chaning the screen to the given BMP file
 proc PrintBMP
 	push bp
 	mov bp, sp
@@ -1988,6 +2070,38 @@ proc PrintBMP
 	pop bp
 	ret 2
 endp PrintBMP
+
+;this procedure prints to the screen a BMP file, doing all the things needed
+;opening the file, reading header, reading palette, copying the palette, copying the BMP, and closing the file
+;input: offset of file's name
+;output: moving to graphics mode and chaning the screen to the given BMP file
+proc PrintBMP1
+	push bp
+	mov bp, sp
+	push ax
+	
+	; Graphic mode
+	mov ax, 13h
+	int 10h
+	; Process BMP file
+	push [bp+4]
+	call OpenFile
+	pop ax ;file's handle
+	push ax
+	push offset Header
+	push offset Palette
+	call ReadHeaderPalette
+	push offset Palette
+	call CopyPal
+	push ax
+	call CopyBitmap
+	push ax
+	call CloseFile
+	
+	pop ax
+	pop bp
+	ret 2
+endp PrintBMP1
 start:
 	mov ax,@data
 	mov ds,ax
@@ -2035,8 +2149,9 @@ start_game:
 	mov ah,0Ch
 	mov al,0
 	int 21h
+	push offset won 
+	push offset los
 	push offset attacked
-	push offset player_status
 	push offset x_player
 	push offset y_player
 	push offset hp_player
@@ -2052,7 +2167,8 @@ start_game:
 	push offset num_position
 	push offset live_mons
 	call manage_game
-	
+looping:
+	jmp looping
 	
 	
 exit:
