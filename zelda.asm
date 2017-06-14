@@ -17,6 +17,7 @@ DATASEG
 	num_position dw ? ;it helps in check_array procedure using this the procedure returns the value with this var 
 	live_mons db 1 ;how many monsters to print this round
 	attacked db ? ;it helps in the mons_attack if the mons_attacked the value is changed to 1
+	dead_mons db ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
 	;printing bmps vars
 	los db 'los.bmp',0
 	won db 'won.bmp',0
@@ -1746,6 +1747,7 @@ endp clear_array
 ; outputs:none
 ; goal:run one game
 proc manage_game
+	dead_mons_offset equ [bp+38]
 	offset_won equ [bp+36]
 	offset_los equ [bp+34]
 	attacked_offset equ [bp+32]
@@ -1768,6 +1770,7 @@ proc manage_game
 	push bx
 	push si
 	push cx
+	
 	;spawns monster
 	push x_player_offset
 	push y_player_offset
@@ -1785,10 +1788,7 @@ proc manage_game
 	push rand_num_offset
 	push mons_num_offset
 	call spawn_mons
-
 	
-
-mons_game:
 	;attacks the player
 	push x_player_offset
 	push y_player_offset
@@ -1803,10 +1803,12 @@ mons_game:
 	push is_near_offset
 	push num_position_offset
 	call mons_attack
+	
 	;clearing is near array
 	push is_near_offset
 	push 4
 	call clear_array
+	
 	;checking if attacked
 	mov bx,attacked_offset
 	cmp [byte ptr bx],1 ;if not attacks the monster move
@@ -1814,24 +1816,8 @@ mons_game:
 	mov bx,hp_player_offset ;if attacks it checks the player health
 	cmp [byte ptr bx],0
 	je lost ;if he died the game is over
-	jne ending
-mons_game_mov:
-	push x_player_offset
-	push y_player_offset
-	push is_legal_offset
-	push is_near_offset
-	push x_mons_arr_offset
-	push y_mons_arr_offset
-	push hp_mons_arr_offset
-	push mons_num_offset
-	push x_helper_offset
-	push y_helper_offset
-	push num_position_offset
-	push live_mons_offset
-	call mov_mons
-
-
-ending:	
+	
+	;another cfp for fluid feel
 	push x_player_offset
 	push y_player_offset
 	push is_legal_offset
@@ -1842,6 +1828,7 @@ ending:
 	push num_position_offset
 	push live_mons_offset
 	call check_for_press
+	
 	;checking if the monster is dead
 	mov bx,mons_num_offset
 	mov si,[word ptr bx]
@@ -1849,12 +1836,15 @@ ending:
 	cmp [byte ptr bx+si],0
 	je win
 	jmp mons_game
+	
 
 lost:
+	;prints loosing screen
 	push offset_los
 	call PrintBMP1
 	jmp finish_manage_game	
 win:
+	;prints winning screen
 	push offset_won
 	call PrintBMP1
 finish_manage_game:
@@ -1862,7 +1852,7 @@ finish_manage_game:
 	pop si
 	pop bx
 	pop bp
-	ret 34
+	ret 36
 endp manage_game
 ; opens a file
 ; input: offset file name
@@ -2106,41 +2096,41 @@ start:
 	mov ax,@data
 	mov ds,ax
 	
-	; Graphic mode
-	mov ax, 13h
-	int 10h
-	; Process BMP file
-	push offset file
-	call OpenFile
-	pop ax ;file's handle
-	push ax
-	push offset Header
-	push offset Palette
-	call ReadHeaderPalette
-	push offset Palette
-	call CopyPal
-	push ax
-	call CopyBitmap
-	push ax
-	call CloseFile
+	; ; Graphic mode
+	; mov ax, 13h
+	; int 10h
+	; ; Process BMP file
+	; push offset file
+	; call OpenFile
+	; pop ax ;file's handle
+	; push ax
+	; push offset Header
+	; push offset Palette
+	; call ReadHeaderPalette
+	; push offset Palette
+	; call CopyPal
+	; push ax
+	; call CopyBitmap
+	; push ax
+	; call CloseFile
 
-PrintLoop:
-	push offset file
-	call PrintBMP
+; PrintLoop:
+	; push offset file
+	; call PrintBMP
 	
-	push 3
-	call timer
+	; push 3
+	; call timer
 	
-	mov ah,1
-	int 16h
-	jnz start_game
+	; mov ah,1
+	; int 16h
+	; jnz start_game
 	
-	dec [byte ptr file]
-	cmp [byte ptr file], '0'
-	jne PrintLoop
-reset: 
-	add [byte ptr file],6
-	jmp PrintLoop
+	; dec [byte ptr file]
+	; cmp [byte ptr file], '0'
+	; jne PrintLoop
+; reset: 
+	; add [byte ptr file],6
+	; jmp PrintLoop
 	
 start_game:
 	mov ah,0
@@ -2149,6 +2139,7 @@ start_game:
 	mov ah,0Ch
 	mov al,0
 	int 21h
+	push offset dead_mons
 	push offset won 
 	push offset los
 	push offset attacked
